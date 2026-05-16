@@ -1,0 +1,306 @@
+CREATE TABLE courses (
+    course_id INT PRIMARY KEY,
+    course_name VARCHAR(100),
+    course_credits INT
+);
+
+CREATE DATABASE university_db;
+
+ALTER TABLE courses
+ADD course_duration INT;
+
+ALTER TABLE courses
+DROP COLUMN course_credits;
+
+DROP TABLE teachers;
+
+DROP TABLE students;
+
+INSERT INTO courses (course_id, course_name, course_duration)
+VALUES 
+(1, 'Mathematics', 12),
+(2, 'Computer Science', 10),
+(3, 'Physics', 8);
+
+UPDATE courses
+SET course_duration = 14
+WHERE course_id = 1;
+
+DELETE FROM courses
+WHERE course_id = 2;
+
+CREATE USER 'user1'@'localhost' IDENTIFIED BY 'password1';
+CREATE USER 'user2'@'localhost' IDENTIFIED BY 'password2';
+
+GRANT SELECT ON university_db.courses TO 'user1'@'localhost';
+
+
+REVOKE INSERT ON university_db.courses FROM 'user1'@'localhost';
+
+GRANT INSERT ON university_db.courses TO 'user2'@'localhost';
+
+START TRANSACTION;
+
+INSERT INTO courses (course_id, course_name, course_duration)
+VALUES 
+(4, 'Chemistry', 10),
+(5, 'Biology', 9);
+
+COMMIT;
+
+INSERT INTO courses (course_id, course_name, course_duration)
+VALUES 
+(6, 'English', 7),
+(7, 'History', 6);
+
+
+CREATE TABLE departments (
+    dept_id INT PRIMARY KEY,
+    dept_name VARCHAR(100)
+);
+
+CREATE TABLE employees (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(100),
+    dept_id INT,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id)
+);
+
+SELECT * FROM courses;
+
+SELECT * 
+FROM courses
+ORDER BY course_duration DESC;
+
+SELECT * 
+FROM courses
+LIMIT 2;
+
+SELECT * 
+FROM courses
+ORDER BY course_duration DESC
+LIMIT 2;
+
+SELECT dept_id, COUNT(*) AS total_employees
+FROM employees
+GROUP BY dept_id;
+
+SELECT dept_id, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY dept_id;
+
+
+DELIMITER //
+
+CREATE PROCEDURE GetEmployeesByDepartment(IN deptId INT)
+BEGIN
+    SELECT *
+    FROM employees
+    WHERE dept_id = deptId;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE PROCEDURE GetCourseById(IN c_id INT)
+BEGIN
+    SELECT *
+    FROM courses
+    WHERE course_id = c_id;
+END //
+
+DELIMITER ;
+
+
+CREATE VIEW employee_department_view AS
+SELECT e.emp_id, e.emp_name, d.dept_name
+FROM employees e
+INNER JOIN departments d
+ON e.dept_id = d.dept_id;
+
+
+CREATE OR REPLACE VIEW employee_department_view AS
+SELECT e.emp_id, e.emp_name, d.dept_name
+FROM employees e
+INNER JOIN departments d
+ON e.dept_id = d.dept_id;
+
+
+CREATE TRIGGER after_employee_insert
+AFTER INSERT ON employees
+FOR EACH ROW
+BEGIN
+    INSERT INTO employee_log (emp_id, action)
+    VALUES (NEW.emp_id, 'Employee Added');
+
+
+ALTER TABLE employees
+ADD last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+DELIMITER //
+
+CREATE TRIGGER before_employee_update
+BEFORE UPDATE ON employees
+FOR EACH ROW
+BEGIN
+    SET NEW.last_modified = CURRENT_TIMESTAMP;
+END //
+
+DELIMITER ;
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    total_employees NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO total_employees
+    FROM employees;
+
+    DBMS_OUTPUT.PUT_LINE('Total Employees: ' || total_employees);
+END;
+
+SELECT SUM(total_amount) AS total_sales
+FROM orders;
+DELIMITER //
+
+CREATE PROCEDURE GetTotalSales()
+BEGIN
+    SELECT SUM(total_amount) AS total_sales FROM orders;
+END //
+
+DELIMITER ;
+CALL GetTotalSales();
+
+DELIMITER //
+
+CREATE PROCEDURE CheckEmployeeDepartment(IN empId INT)
+BEGIN
+    DECLARE dept INT;
+
+    SELECT dept_id INTO dept
+    FROM employees
+    WHERE emp_id = empId;
+
+    IF dept = 1 THEN
+        SELECT 'Employee belongs to HR department' AS message;
+    ELSEIF dept = 2 THEN
+        SELECT 'Employee belongs to IT department' AS message;
+    ELSE
+        SELECT 'Employee belongs to another department' AS message;
+    END IF;
+END //
+CALL CheckEmployeeDepartment(101);
+
+DELIMITER //
+CREATE PROCEDURE DisplayEmployeeNames()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE empName VARCHAR(100);
+
+    DECLARE emp_cursor CURSOR FOR
+        SELECT emp_name FROM employees;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN emp_cursor;
+
+    read_loop: LOOP
+        FETCH emp_cursor INTO empName;
+
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SELECT empName AS employee_name;
+    END LOOP;
+
+    CLOSE emp_cursor;
+END //
+DELIMITER ;
+CALL DisplayEmployeeNames();
+
+
+DELIMITER //
+
+CREATE PROCEDURE DisplayEmployeeDetails()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE e_id INT;
+    DECLARE e_name VARCHAR(100);
+    DECLARE d_id INT;
+
+    DECLARE emp_cursor CURSOR FOR
+        SELECT emp_id, emp_name, dept_id FROM employees;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN emp_cursor;
+
+    read_loop: LOOP
+        FETCH emp_cursor INTO e_id, e_name, d_id;
+
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SELECT e_id AS emp_id, e_name AS emp_name, d_id AS dept_id;
+    END LOOP;
+
+    CLOSE emp_cursor;
+END //
+
+DELIMITER ;
+CALL DisplayEmployeeDetails();
+
+
+DELIMITER //
+
+CREATE PROCEDURE DisplayCourses()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE c_id INT;
+    DECLARE c_name VARCHAR(100);
+    DECLARE c_duration INT;
+
+    DECLARE course_cursor CURSOR FOR
+        SELECT course_id, course_name, course_duration FROM courses;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN course_cursor;
+
+    read_loop: LOOP
+        FETCH course_cursor INTO c_id, c_name, c_duration;
+
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SELECT c_id AS course_id, c_name AS course_name, c_duration AS course_duration;
+    END LOOP;
+
+    CLOSE course_cursor;
+END //
+
+DELIMITER ;
+CALL DisplayCourses();
+
+
+START TRANSACTION;
+SAVEPOINT sp1;
+INSERT INTO courses (course_id, course_name, course_duration)
+VALUES 
+(8, 'Geography', 6),
+(9, 'Economics', 7);
+ROLLBACK TO sp1;
+COMMIT;
+
+START TRANSACTION;
+INSERT INTO courses (course_id, course_name, course_duration)
+VALUES (10, 'Statistics', 8);
+SAVEPOINT sp1;
+INSERT INTO courses (course_id, course_name, course_duration)
+VALUES (11, 'Philosophy', 5);
+ROLLBACK TO sp1;
+COMMIT;

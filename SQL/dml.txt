@@ -1,0 +1,16 @@
+data manuplation lang.
+
+insert 
+
+insert into student1(student)
+
+
+DELETE
+
+DELETE FROM student1 WHERE cname="python";
+
+
+
+dql=data quesry lang
+
+

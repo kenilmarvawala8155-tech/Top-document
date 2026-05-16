@@ -1,0 +1,55 @@
+select * from product where catid=1 and price > 5000;
+select * from product where catid=1 or price > 5000;
+
+select * from product where  not catid=1
+
+select * from product limit 0,15;
+
+select * from product limit 15,5;
+
+
+select min(price) as minimumprice ,productname from product;
+
+select max(price) as maxprice ,productname from product;
+
+select sum(price) as totalprice  from product;
+
+select avg(price) as avgprice from product;
+
+select count(productid) as countproductelectronic  from product where catid=1;
+
+select * from product where productname like '%i';
+select * from product where productname like 'i%';
+select * from product where productname like '%i%';
+
+
+select * from product where catid not in (1,3,2);
+select * from product where catid  in (1,3,2);
+select * from product where price between 700 and 40000;
+
+select * from student_course join student on student_course.sid =student.
+studentId join course on student_course.cid =course.cid;
+
+select * from student_course left join course on student_course.cid =course.cid; 
+
+
+select * from student_course right join course on student_course.cid =course.cid; 
+
+select * from student_course full join course;
+
+select count(productid),cname from product join category on product.catid
+=category.cid group by catid;
+
+select sum(price),catid ,cname from product join category on product.catid=
+category.cid group by catid;
+
+select sum(price) as totalprice ,catid ,cname from product join category on product.catid=
+category.cid group by catid having totalprice>10000;
+
+select count(studentId),cname from student1 join course on student1.studentId
+=course.cid group by cid;
+
+
+select sum(fees)as totalfees,cid ,cname from student1 join course on student1.studentId=
+course.cid group by cid HAVING totalfees > 68000;
+
